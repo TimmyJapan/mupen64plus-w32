@@ -1,0 +1,44 @@
+name: Build Mupen64Plus x86 Windows
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      # We build Core first because everything else depends on its headers
+      - name: Build Mupen64Plus Core
+        run: msbuild mupen64plus-core/projects/msvc8/mupen64plus-core.sln /p:Configuration=Release /p:Platform=Win32
+
+      - name: Build Rice Video Plugin
+        run: msbuild mupen64plus-video-rice/projects/msvc8/mupen64plus-video-rice.sln /p:Configuration=Release /p:Platform=Win32
+
+      - name: Build Input SDL
+        run: msbuild mupen64plus-input-sdl/projects/msvc8/mupen64plus-input-sdl.sln /p:Configuration=Release /p:Platform=Win32
+
+      - name: Build RSP HLE
+        run: msbuild mupen64plus-rsp-hle/projects/msvc8/mupen64plus-rsp-hle.sln /p:Configuration=Release /p:Platform=Win32
+
+      - name: Build Console UI
+        run: msbuild mupen64plus-ui-console/projects/msvc8/mupen64plus-ui-console.sln /p:Configuration=Release /p:Platform=Win32
+
+      - name: Create Bundle Folder
+        run: |
+          mkdir build_output
+          copy mupen64plus-ui-console/projects/msvc8/Release/*.exe build_output/
+          copy mupen64plus-core/projects/msvc8/Release/*.dll build_output/
+          copy mupen64plus-video-rice/projects/msvc8/Release/*.dll build_output/
+          copy mupen64plus-input-sdl/projects/msvc8/Release/*.dll build_output/
+          copy mupen64plus-rsp-hle/projects/msvc8/Release/*.dll build_output/
+
+      - name: Upload Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: mupen64plus-win32-rice
+          path: build_output/

@@ -24,8 +24,7 @@ jobs:
             mingw-w64-i686-zlib
             nasm
             pkg-config
-
-- name: Build All Components
+      - name: Build All Components
         shell: msys2 {0}
         run: |
           ROOT_DIR=$(pwd)

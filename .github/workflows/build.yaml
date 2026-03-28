@@ -59,13 +59,25 @@ jobs:
           echo ">>> Building UI Console..."
           cd $ROOT_DIR/source/mupen64plus-ui-console/projects/unix
           
-          # SHAREDIR=. LIBDIR=. を追加して、パスをカレントディレクトリに固定
+          # COREDIRの指定を削除し、LDFLAGSでカレントディレクトリを優先させる
+          # SHAREDIR, LIBDIR, CONFDIR もすべてカレントディレクトリ(.)に
           make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
             CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
-            APIDIR=$CORE_INC COREDIR=$DIST_DIR/ \
-            SHAREDIR=. LIBDIR=. -j$(nproc)
+            APIDIR=$CORE_INC \
+            SHAREDIR=. LIBDIR=. CONFDIR=. \
+            LDFLAGS="-L$DIST_DIR -Wl,-rpath,."
+
           cp mupen64plus.exe $DIST_DIR/
-          cp /mingw32/bin/libwinpthread-*.dll $DIST_DIR/ || :
+          # MSYS2のbinから必要なDLLをコピー（名前の微差をワイルドカードで吸収）
+          cp /mingw32/bin/SDL2.dll $DIST_DIR/
+          cp /mingw32/bin/zlib1.dll $DIST_DIR/
+          cp /mingw32/bin/libpng*.dll $DIST_DIR/
+          cp /mingw32/bin/libfreetype*.dll $DIST_DIR/
+          
+          # もし libgcc 関連でエラーが出るならこれも追加
+          cp /mingw32/bin/libgcc_s_*.dll $DIST_DIR/ || :
+          cp /mingw32/bin/libstdc++-*.dll $DIST_DIR/ || :
+          cp /mingw32/bin/libwinpthread-*.dll $DIST_DIR/ || 
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

@@ -22,27 +22,27 @@ jobs:
           copy SDL2_dev/SDL2-2.28.5/lib/x86/SDL2.dll build_output/
 
       - name: Build Mupen64Plus Core
-        run: msbuild mupen64plus-core/projects/msvc/mupen64plus-core.vcxproj /p:Configuration=Release /p:Platform=Win32
+        run: msbuild source/mupen64plus-core/projects/msvc/mupen64plus-core.vcxproj /p:Configuration=Release /p:Platform=Win32
 
       - name: Build Rice Video Plugin
-        run: msbuild mupen64plus-video-rice/projects/msvc/mupen64plus-video-rice.vcxproj /p:Configuration=Release /p:Platform=Win32
+        run: msbuild source/mupen64plus-video-rice/projects/msvc/mupen64plus-video-rice.vcxproj /p:Configuration=Release /p:Platform=Win32
 
       - name: Build Input SDL
-        run: msbuild mupen64plus-input-sdl/projects/msvc/mupen64plus-input-sdl.vcxproj /p:Configuration=Release /p:Platform=Win32
+        run: msbuild source/mupen64plus-input-sdl/projects/msvc/mupen64plus-input-sdl.vcxproj /p:Configuration=Release /p:Platform=Win32
 
       - name: Build RSP HLE
-        run: msbuild mupen64plus-rsp-hle/projects/msvc/mupen64plus-rsp-hle.vcxproj /p:Configuration=Release /p:Platform=Win32
+        run: msbuild source/mupen64plus-rsp-hle/projects/msvc/mupen64plus-rsp-hle.vcxproj /p:Configuration=Release /p:Platform=Win32
 
       - name: Build Console UI
-        run: msbuild mupen64plus-ui-console/projects/msvc/mupen64plus-ui-console.vcxproj /p:Configuration=Release /p:Platform=Win32
+        run: msbuild source/mupen64plus-ui-console/projects/msvc/mupen64plus-ui-console.vcxproj /p:Configuration=Release /p:Platform=Win32
 
       - name: Finalize Bundle
         run: |
-          copy mupen64plus-ui-console/projects/msvc/Release/*.exe build_output/
-          copy mupen64plus-core/projects/msvc/Release/*.dll build_output/
-          copy mupen64plus-video-rice/projects/msvc/Release/*.dll build_output/
-          copy mupen64plus-input-sdl/projects/msvc/Release/*.dll build_output/
-          copy mupen64plus-rsp-hle/projects/msvc/Release/*.dll build_output/
+          copy source/mupen64plus-ui-console/projects/msvc/Release/*.exe build_output/
+          copy source/mupen64plus-core/projects/msvc/Release/*.dll build_output/
+          copy source/mupen64plus-video-rice/projects/msvc/Release/*.dll build_output/
+          copy source/mupen64plus-input-sdl/projects/msvc/Release/*.dll build_output/
+          copy source/mupen64plus-rsp-hle/projects/msvc/Release/*.dll build_output/
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v4

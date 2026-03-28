@@ -31,12 +31,18 @@ jobs:
           ROOT_DIR=$(pwd)
           DIST_DIR=$ROOT_DIR/dist
           mkdir -p $DIST_DIR
-
+          
           # 1. Core のビルド
           echo ">>> Building Core..."
           cd $ROOT_DIR/source/mupen64plus-core/projects/unix
-          # HOST_CPU=i686 を追加して、x86_64コードの誤爆を防ぐ
-          make all OS=MINGW ARCH=i686 HOST_CPU=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ VULKAN=0 -j$(nproc)
+          
+          # LDFLAGS に -static を追加して、gcc/stdc++ を DLL 内に封じ込めます
+          make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
+            CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
+            VULKAN=0 \
+            LDFLAGS="-static -static-libgcc -static-libstdc++" \
+            -j$(nproc)
+
           cp mupen64plus.dll $DIST_DIR/
           
           # 2. Plugins のビルド

@@ -36,11 +36,12 @@ jobs:
           echo ">>> Building Core..."
           cd $ROOT_DIR/source/mupen64plus-core/projects/unix
           
-          # LDFLAGS に -static を追加して、gcc/stdc++ を DLL 内に封じ込めます
+          # 32bit特有の読み込みエラーを回避するため、gcc/stdc++を静的に埋め込みつつ、
+          # SDL2が必要とするWindows標準ライブラリを明示的にリンクします
           make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
             CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
             VULKAN=0 \
-            LDFLAGS="-static -static-libgcc -static-libstdc++" \
+            LDFLAGS="-static-libgcc -static-libstdc++ -lwinmm -imm32 -lole32 -loleaut32 -lsetupapi -lversion -luuid" \
             -j$(nproc)
 
           cp mupen64plus.dll $DIST_DIR/

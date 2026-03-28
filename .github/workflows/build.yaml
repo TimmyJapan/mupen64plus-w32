@@ -56,19 +56,23 @@ jobs:
             cp *.dll $DIST_DIR/ 2>/dev/null || :
           done
           # 3. UI (Console) のビルド
-          echo ">>> Building UI Console..."
+          echo ">>> Patching and Building UI Console..."
           cd $ROOT_DIR/source/mupen64plus-ui-console/projects/unix
           
-          # 修正ポイント：
-          # 1. パスに関わる変数をすべて空文字 ("") で上書きします。
-          # 2. これによりバイナリ内に絶対パスが書き込まれるのを物理的に防ぎます。
+          # 物理的に絶対パスの参照を消去するパッチ
+          # main.c 内の LoadLibrary 呼び出し部分から絶対パス変数を排除します
+          sed -i 's/COREDIR "//g' ../../src/main.c
+          sed -i 's/", "mupen64plus.dll"/"mupen64plus.dll"/g' ../../src/main.c
+
+          # 念のため Makefile のデフォルト定義も完全に破壊します
           make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
             CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
             APIDIR=$CORE_INC \
-            COREDIR="" LIBDIR="" SHAREDIR="" CONFDIR="" PLUGINDIR="" \
+            COREDIR=. LIBDIR=. SHAREDIR=. \
             -j$(nproc)
 
           cp mupen64plus.exe $DIST_DIR/
+          
           # MSYS2のbinから必要なDLLをコピー（名前の微差をワイルドカードで吸収）
           cp /mingw32/bin/SDL2.dll $DIST_DIR/
           cp /mingw32/bin/zlib1.dll $DIST_DIR/

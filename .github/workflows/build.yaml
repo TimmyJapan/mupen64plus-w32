@@ -25,7 +25,7 @@ jobs:
             nasm
             pkg-config
 
-      - name: Build All Components
+- name: Build All Components
         shell: msys2 {0}
         run: |
           ROOT_DIR=$(pwd)
@@ -33,16 +33,15 @@ jobs:
           mkdir -p $DIST_DIR
           
           # 1. Core のビルド
+          echo ">>> Building Core..."
+          cd $ROOT_DIR/source/mupen64plus-core/projects/unix
           make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
             CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
-            VULKAN=0 \
-            -j$(nproc)
-
+            VULKAN=0 -j$(nproc)
           cp mupen64plus.dll $DIST_DIR/
           
           # 2. Plugins のビルド
           CORE_INC=$ROOT_DIR/source/mupen64plus-core/src/api
-          
           COMPONENTS=(
             "mupen64plus-input-sdl"
             "mupen64plus-rsp-hle"
@@ -51,18 +50,20 @@ jobs:
 
           for COMP in "${COMPONENTS[@]}"; do
             echo ">>> Building $COMP..."
+            # ループの度に ROOT_DIR から移動することで迷子を防ぐ
             cd $ROOT_DIR/source/$COMP/projects/unix
-            # プラグイン側にも HOST_CPU=i686 を追加
-            make all OS=MINGW ARCH=i686 HOST_CPU=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC VULKAN=0 -j$(nproc)
+            make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
+              CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
+              APIDIR=$CORE_INC VULKAN=0 -j$(nproc)
             cp *.dll $DIST_DIR/ 2>/dev/null || :
           done
           
           # 3. UI (Console) のビルド
           echo ">>> Building UI Console..."
+          # ここで確実に UI のフォルダへ移動
           cd $ROOT_DIR/source/mupen64plus-ui-console/projects/unix
           
-          # COREDIR を "." (カレントディレクトリ) に明示的に設定します
-          # これにより、exeは「自分の足元」を真っ先に探すようになります
+          # COREDIR="." を指定して、exeと同じ場所のDLLを優先させる
           make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
             CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
             APIDIR=$CORE_INC \
@@ -71,13 +72,11 @@ jobs:
 
           cp mupen64plus.exe $DIST_DIR/
           
-          # MSYS2のbinから必要なDLLをコピー（名前の微差をワイルドカードで吸収）
+          # 依存DLLのコピー
           cp /mingw32/bin/SDL2.dll $DIST_DIR/
           cp /mingw32/bin/zlib1.dll $DIST_DIR/
           cp /mingw32/bin/libpng*.dll $DIST_DIR/
           cp /mingw32/bin/libfreetype*.dll $DIST_DIR/
-          
-          # もし libgcc 関連でエラーが出るならこれも追加
           cp /mingw32/bin/libgcc_s_*.dll $DIST_DIR/ || :
           cp /mingw32/bin/libstdc++-*.dll $DIST_DIR/ || :
           cp /mingw32/bin/libwinpthread-*.dll $DIST_DIR/ || :

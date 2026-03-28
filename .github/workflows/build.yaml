@@ -33,15 +33,9 @@ jobs:
           mkdir -p $DIST_DIR
           
           # 1. Core のビルド
-          echo ">>> Building Core..."
-          cd $ROOT_DIR/source/mupen64plus-core/projects/unix
-          
-          # 32bit特有の読み込みエラーを回避するため、gcc/stdc++を静的に埋め込みつつ、
-          # SDL2が必要とするWindows標準ライブラリを明示的にリンクします
           make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
             CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
             VULKAN=0 \
-            LDFLAGS="-static-libgcc -static-libstdc++ -lwinmm -imm32 -lole32 -loleaut32 -lsetupapi -lversion -luuid" \
             -j$(nproc)
 
           cp mupen64plus.dll $DIST_DIR/
@@ -62,20 +56,17 @@ jobs:
             make all OS=MINGW ARCH=i686 HOST_CPU=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC VULKAN=0 -j$(nproc)
             cp *.dll $DIST_DIR/ 2>/dev/null || :
           done
+          
           # 3. UI (Console) のビルド
-          echo ">>> Patching and Building UI Console..."
+          echo ">>> Building UI Console..."
           cd $ROOT_DIR/source/mupen64plus-ui-console/projects/unix
           
-          # 物理的に絶対パスの参照を消去するパッチ
-          # main.c 内の LoadLibrary 呼び出し部分から絶対パス変数を排除します
-          sed -i 's/COREDIR "//g' ../../src/main.c
-          sed -i 's/", "mupen64plus.dll"/"mupen64plus.dll"/g' ../../src/main.c
-
-          # 念のため Makefile のデフォルト定義も完全に破壊します
+          # COREDIR を "." (カレントディレクトリ) に明示的に設定します
+          # これにより、exeは「自分の足元」を真っ先に探すようになります
           make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
             CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
             APIDIR=$CORE_INC \
-            COREDIR=. LIBDIR=. SHAREDIR=. \
+            COREDIR="." LIBDIR="." SHAREDIR="." CONFDIR="." \
             -j$(nproc)
 
           cp mupen64plus.exe $DIST_DIR/

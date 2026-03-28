@@ -32,8 +32,8 @@ jobs:
           # 1. Core のビルド
           echo ">>> Building Core..."
           cd $ROOT_DIR/source/mupen64plus-core/projects/unix
-          # 'all' ターゲットを最初に入れ、OS指定を行う
-          make all OS=MINGW ARCH=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++
+          # VULKAN=0 を追加
+          make all OS=MINGW ARCH=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ VULKAN=0
           cp mupen64plus.dll $DIST_DIR/
           
           # 2. Plugins のビルド
@@ -48,15 +48,14 @@ jobs:
           for COMP in "${COMPONENTS[@]}"; do
             echo ">>> Building $COMP..."
             cd $ROOT_DIR/source/$COMP/projects/unix
-            # ターゲット 'all' と、ヘッダ参照用の 'APIDIR' を追加
-            make all OS=MINGW ARCH=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC
+            # ここにも VULKAN=0 を追加（念のため）
+            make all OS=MINGW ARCH=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC VULKAN=0
             cp *.dll $DIST_DIR/ 2>/dev/null || :
           done
 
           # 3. UI (Console) のビルド
           echo ">>> Building UI Console..."
           cd $ROOT_DIR/source/mupen64plus-ui-console/projects/unix
-          # 'all' ターゲットと、DLL・ヘッダの場所を指定
           make all OS=MINGW ARCH=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC COREDIR=$DIST_DIR/
           cp mupen64plus.exe $DIST_DIR/
 

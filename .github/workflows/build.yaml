@@ -59,26 +59,32 @@ jobs:
           
           # 3. UI (Console) のビルド
           echo ">>> Building UI Console..."
-          # ここで確実に UI のフォルダへ移動
           cd $ROOT_DIR/source/mupen64plus-ui-console/projects/unix
           
-          # COREDIR="." を指定して、exeと同じ場所のDLLを優先させる
+          # 修正：エラー時に Windows のエラーコードを表示するように main.c を改造
+          sed -i '1i #include <windows.h>' ../../src/main.c
+          sed -i '1i #include <stdio.h>' ../../src/main.c
+          # LoadLibrary 失敗時にエラー番号を標準出力に出す
+          sed -i 's/LoadLibrary(path);/({ HMODULE h = LoadLibrary(path); if(!h) printf("DEBUG: LoadLibrary Error Code: %lu\\n", GetLastError()); h; });/g' ../../src/main.c
+
           make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
             CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
             APIDIR=$CORE_INC \
-            COREDIR="." LIBDIR="." SHAREDIR="." CONFDIR="." \
+            COREDIR="." \
+            LDFLAGS="-static-libgcc -static-libstdc++" \
             -j$(nproc)
 
           cp mupen64plus.exe $DIST_DIR/
           
-          # 依存DLLのコピー
+          # --- 依存DLLのコピー（ここを強化） ---
+          # 32bitで必須となるランタイムを漏らさず収集
           cp /mingw32/bin/SDL2.dll $DIST_DIR/
           cp /mingw32/bin/zlib1.dll $DIST_DIR/
-          cp /mingw32/bin/libpng*.dll $DIST_DIR/
-          cp /mingw32/bin/libfreetype*.dll $DIST_DIR/
-          cp /mingw32/bin/libgcc_s_*.dll $DIST_DIR/ || :
-          cp /mingw32/bin/libstdc++-*.dll $DIST_DIR/ || :
-          cp /mingw32/bin/libwinpthread-*.dll $DIST_DIR/ || :
+          cp /mingw32/bin/libpng16-16.dll $DIST_DIR/
+          cp /mingw32/bin/libfreetype-6.dll $DIST_DIR/
+          cp /mingw32/bin/libgcc_s_dw2-1.dll $DIST_DIR/
+          cp /mingw32/bin/libstdc++-6.dll $DIST_DIR/
+          cp /mingw32/bin/libwinpthread-1.dll $DIST_DIR/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

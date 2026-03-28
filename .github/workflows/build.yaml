@@ -55,11 +55,14 @@ jobs:
             make all OS=MINGW ARCH=i686 HOST_CPU=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC VULKAN=0 -j$(nproc)
             cp *.dll $DIST_DIR/ 2>/dev/null || :
           done
-
           # 3. UI (Console) のビルド
           echo ">>> Building UI Console..."
           cd $ROOT_DIR/source/mupen64plus-ui-console/projects/unix
-          make all OS=MINGW ARCH=i686 HOST_CPU=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC COREDIR=$DIST_DIR/ -j$(nproc)
+          # SHAREDIR と LIBDIR を . (カレントディレクトリ) に設定してポータブル化
+          make all OS=MINGW ARCH=i686 HOST_CPU=i686 \
+          CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ \
+          APIDIR=$CORE_INC COREDIR=$DIST_DIR/ \
+          SHAREDIR=. LIBDIR=.
           cp mupen64plus.exe $DIST_DIR/
           # MSYS2のbinから必要なDLLをコピー（名前の微差をワイルドカードで吸収）
           cp /mingw32/bin/SDL2.dll $DIST_DIR/

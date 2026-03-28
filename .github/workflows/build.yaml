@@ -61,6 +61,12 @@ jobs:
           cd $ROOT_DIR/source/mupen64plus-ui-console/projects/unix
           make all OS=MINGW ARCH=i686 HOST_CPU=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC COREDIR=$DIST_DIR/
           cp mupen64plus.exe $DIST_DIR/
+          # MSYS2のbinから必要なDLLをコピー
+          cp /mingw32/bin/SDL2.dll $DIST_DIR/
+          cp /mingw32/bin/zlib1.dll $DIST_DIR/
+          cp /mingw32/bin/libpng16.dll $DIST_DIR/
+          cp /mingw32/bin/libfreetype-6.dll $DIST_DIR/
+          # 他、エラーが出るたびにここに追加
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

@@ -25,31 +25,40 @@ jobs:
       - name: Build All Components
         shell: msys2 {0}
         run: |
-          # 各ディレクトリを巡回してビルド
+          ROOT_DIR=$(pwd)
+          DIST_DIR=$ROOT_DIR/dist
+          mkdir -p $DIST_DIR
+
+          # 1. Core のビルド
+          echo ">>> Building Core..."
+          cd $ROOT_DIR/source/mupen64plus-core/projects/unix
+          # 'all' ターゲットを最初に入れ、OS指定を行う
+          make all OS=MINGW ARCH=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++
+          cp mupen64plus.dll $DIST_DIR/
+          
+          # 2. Plugins のビルド
+          CORE_INC=$ROOT_DIR/source/mupen64plus-core/src/api
+          
           COMPONENTS=(
-            "mupen64plus-core"
             "mupen64plus-input-sdl"
             "mupen64plus-rsp-hle"
             "mupen64plus-video-rice"
-            "mupen64plus-ui-console"
           )
 
-          mkdir -p ./dist
-
           for COMP in "${COMPONENTS[@]}"; do
-            echo "Building $COMP..."
-            cd "source/$COMP/projects/unix"
-            
-            # Win32ターゲット、最適化、APIディレクトリの指定
-            # Mupen64PlusのMakefile標準引数を利用
-            make OS=MINGW ARCH=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++
-            
-            # 生成された .dll または .exe を dist フォルダにコピー
-            cp *.dll ../../../../dist/ 2>/dev/null || :
-            cp *.exe ../../../../dist/ 2>/dev/null || :
-            
-            cd ../../../../
+            echo ">>> Building $COMP..."
+            cd $ROOT_DIR/source/$COMP/projects/unix
+            # ターゲット 'all' と、ヘッダ参照用の 'APIDIR' を追加
+            make all OS=MINGW ARCH=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC
+            cp *.dll $DIST_DIR/ 2>/dev/null || :
           done
+
+          # 3. UI (Console) のビルド
+          echo ">>> Building UI Console..."
+          cd $ROOT_DIR/source/mupen64plus-ui-console/projects/unix
+          # 'all' ターゲットと、DLL・ヘッダの場所を指定
+          make all OS=MINGW ARCH=i686 CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ APIDIR=$CORE_INC COREDIR=$DIST_DIR/
+          cp mupen64plus.exe $DIST_DIR/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

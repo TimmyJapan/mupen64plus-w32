@@ -15,12 +15,14 @@ jobs:
           msystem: MINGW32
           update: true
           install: >-
-            mingw-w64-i686-toolchain
-            mingw-w64-i686-SDL2
-            mingw-w64-i686-libpng
-            mingw-w64-i686-freetype
-            mingw-w64-i686-zlib
             make
+            git
+            mingw-w64-i686-gcc
+            mingw-w64-i686-SDL2
+            mingw-w64-i686-freetype
+            mingw-w64-i686-libpng
+            mingw-w64-i686-zlib
+            nasm
 
       - name: Build All Components
         shell: msys2 {0}
